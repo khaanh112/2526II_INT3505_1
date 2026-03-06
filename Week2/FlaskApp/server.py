@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, make_response, request
+from flask import Flask, current_app, jsonify, make_response, request, g
 
 app = Flask(__name__)
 
@@ -8,20 +8,49 @@ products = [
     {"id": 3, "name": "Product 3", "price": 5.99},
 ]
 
+TOKENS = {
+    "token_user_123": {"id": 1, "name": "Mai", "role": "user"},
+    "token_admin_456": {"id": 2, "name": "Admin", "role": "admin"},
+}
+
+# Middleware: chạy trước mỗi request
+@app.before_request
+def authenticate():
+    # Những route public không cần token
+    public_paths = ["/", "/products"]
+    is_product_detail = request.path.startswith("/products/") and request.method == "GET"
+
+    if request.path in public_paths or is_product_detail:
+        return
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return jsonify({"error": "Missing Authorization header"}), 401
+
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0] != "Bearer":
+        return jsonify({"error": "Invalid Authorization format"}), 401
+
+    token = parts[1]
+    user = TOKENS.get(token)
+
+    if not user:
+        return jsonify({"error": "Invalid token"}), 401
+
+    g.current_user = user  # Lưu thông tin user vào context toàn cục
+
+
 @app.route("/")
 def home():
     return "Hello Flask"
 
 @app.get("/profile")
 def profile():
-    auth = request.headers.get("Authorization")
-    if not auth:
-        return {"error": "Missing Authorization header"}, 401
+    user = getattr(g, "current_user", None)
+    if user:
+        return {"profile": user}, 200
+    return {"error": "Unauthorized"}, 401
 
-    return {
-        "message": "This is a stateless request",
-        "token_received": auth
-    }, 200
 
 @app.get("/products")
 def list_products():

@@ -17,7 +17,7 @@ TOKENS = {
 @app.before_request
 def authenticate():
     
-    public_paths = ["/", "/products"]
+    public_paths = ["/", "/products", "/code-on-demand"]
     is_product_detail = request.path.startswith("/products/") and request.method == "GET"
 
     if request.path in public_paths or is_product_detail:
@@ -109,13 +109,8 @@ def delete_product(product_id):
 
 @app.get("/code-on-demand")
 def code_on_demand():
-    """
-    REST Constraint: Code on Demand (optional)
-    Server gửi Python code về client để client tự thực thi bằng exec().
-    """
+    
     python_code = """
-import json
-
 products = {products}
 
 def render_products(data):

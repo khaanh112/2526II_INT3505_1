@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, make_response, request
 
 app = Flask(__name__)
 
@@ -11,6 +11,17 @@ products = [
 @app.route("/")
 def home():
     return "Hello Flask"
+
+@app.get("/profile")
+def profile():
+    auth = request.headers.get("Authorization")
+    if not auth:
+        return {"error": "Missing Authorization header"}, 401
+
+    return {
+        "message": "This is a stateless request",
+        "token_received": auth
+    }, 200
 
 @app.get("/products")
 def list_products():
@@ -28,13 +39,16 @@ def list_products():
 def product_detail(product_id):
     product = next((p for p in products if p["id"] == product_id), None)
     if product:
-        return {"product": product,
+        data = {"product": product,
                 "links": {
                     "self": f"/products/{product_id}",
                     "update": f"/products/{product_id}",
                     "delete": f"/products/{product_id}"
                 }
-                }, 200
+        }
+        response = make_response(jsonify(data))
+        response.headers["Cache-Control"] = "public, max-age=3600"  
+        return response
     return {"error": "Product not found"}, 404
 
 @app.post("/products")

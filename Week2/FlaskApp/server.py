@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
@@ -14,13 +14,27 @@ def home():
 
 @app.get("/products")
 def list_products():
-    return {"products": products}
+    return {"products": products,
+            "links": {
+                "self": "/products",
+                "create": "/products",
+                "product_detail": "/products/<id>",
+                "update_product": "/products/<id>",
+                "delete_product": "/products/<id>"
+            }
+            }, 200
 
 @app.get("/products/<int:product_id>")
 def product_detail(product_id):
     product = next((p for p in products if p["id"] == product_id), None)
     if product:
-        return {"product": product}, 200
+        return {"product": product,
+                "links": {
+                    "self": f"/products/{product_id}",
+                    "update": f"/products/{product_id}",
+                    "delete": f"/products/{product_id}"
+                }
+                }, 200
     return {"error": "Product not found"}, 404
 
 @app.post("/products")
@@ -30,6 +44,32 @@ def create_product():
     return {"message": "Product created", "product": new_product  }, 201
 
 
+@app.put("/products/<int:product_id>")
+def update_product(product_id):
+    product = next((p for p in products if p["id"] == product_id), None)
+    if product:
+        product["name"] = "Updated Product"
+        product["price"] = 14.99
+        return {"message": "Product updated", "product": product}, 200
+    return {"error": "Product not found"}, 404
+
+
+@app.delete("/products/<int:product_id>")
+def delete_product(product_id):
+    delete_product = next((p for p in products if p["id"] == product_id), None)
+    if delete_product:
+        products.remove(delete_product)
+        return {"message": "Product deleted"}, 200
+    return {"error": "Product not found"}, 404
+
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        "error": "Not Found",
+        "message": "URL không tồn tại"
+    }), 404
 
 
 if __name__ == "__main__":

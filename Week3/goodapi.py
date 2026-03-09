@@ -17,6 +17,10 @@ orders = [
 def get_users():
     return jsonify(users), 200
 
+@app.get("/api/v1/users")
+def get_users_v1():
+    return jsonify(users), 200
+
 
 @app.get("/users/<int:user_id>")
 def get_user(user_id):

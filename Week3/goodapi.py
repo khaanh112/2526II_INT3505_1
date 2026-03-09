@@ -7,6 +7,11 @@ users = [
     {"id": 2, "name": "An", "email": "an@example.com"},
 ]
 
+orders = [
+    {"id": 1, "user_id": 1, "total": 100},
+    {"id": 2, "user_id": 1, "total": 250},
+    {"id": 3, "user_id": 2, "total": 180},
+]
 
 @app.get("/users")
 def get_users():
@@ -71,6 +76,10 @@ def delete_user(user_id):
     users = [u for u in users if u["id"] != user_id]
     return "", 204
 
+@app.get("/users/<int:user_id>/orders")
+def get_user_orders(user_id):
+    user_orders = [o for o in orders if o["user_id"] == user_id]
+    return jsonify(user_orders), 200
 
 if __name__ == "__main__":
     app.run(debug=True)

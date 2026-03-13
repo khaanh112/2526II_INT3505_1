@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: Week4 Student Management API
+  version: 1.0.0
+  description: |
+    API demo cho môn học nhằm minh hoạ cách tài liệu hoá dịch vụ REST bằng OpenAPI (Swagger).
+
+    Mục tiêu học tập:
+    - Hiểu vai trò của OpenAPI trong chuẩn hoá giao tiếp client-server.
+    - Nắm cấu trúc `paths`, `components/schemas`, `components/parameters`.
+    - Sinh tài liệu tự động qua Swagger UI.
+servers:
+  - url: http://127.0.0.1:5000
+    description: Local development server
+
+tags:
+  - name: Health
+    description: Endpoints kiểm tra trạng thái dịch vụ
+  - name: Students
+    description: Endpoints quản lý sinh viên
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Kiểm tra trạng thái API
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API hoạt động bình thường
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                success: true
+                data:
+                  status: ok
+                message: Service is healthy
+
+  /students:
+    get:
+      tags: [Students]
+      summary: Lấy danh sách sinh viên
+      description: Trả về toàn bộ sinh viên hoặc lọc theo năm học (`year`).
+      operationId: getStudents
+      parameters:
+        - $ref: '#/components/parameters/YearQueryParam'
+      responses:
+        '200':
+          description: Danh sách sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentListResponse'
+
+    post:
+      tags: [Students]
+      summary: Tạo mới sinh viên
+      operationId: createStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStudentRequest'
+            example:
+              full_name: Le Van C
+              email: c.le@example.com
+              year: 3
+      responses:
+        '201':
+          description: Tạo sinh viên thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentSingleResponse'
+        '400':
+          description: Dữ liệu đầu vào không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Trùng email sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /students/{student_id}:
+    get:
+      tags: [Students]
+      summary: Lấy chi tiết một sinh viên
+      operationId: getStudentById
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+      responses:
+        '200':
+          description: Thông tin sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentSingleResponse'
+        '404':
+          description: Không tìm thấy sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Students]
+      summary: Xoá một sinh viên
+      operationId: deleteStudent
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+      responses:
+        '200':
+          description: Xoá thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+        '404':
+          description: Không tìm thấy sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    StudentIdPathParam:
+      name: student_id
+      in: path
+      required: true
+      description: Định danh duy nhất của sinh viên
+      schema:
+        type: integer
+        minimum: 1
+
+    YearQueryParam:
+      name: year
+      in: query
+      required: false
+      description: Lọc danh sách theo năm học (1-4)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 4
+
+  schemas:
+    Student:
+      type: object
+      required: [id, full_name, email, year]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        full_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        year:
+          type: integer
+          minimum: 1
+          maximum: 4
+
+    CreateStudentRequest:
+      type: object
+      required: [full_name, email, year]
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        year:
+          type: integer
+          minimum: 1
+          maximum: 4
+
+    HealthResponse:
+      type: object
+      required: [success, data, message]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              example: ok
+        message:
+          type: string
+          example: Service is healthy
+
+    StudentSingleResponse:
+      type: object
+      required: [success, data, message]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Student'
+        message:
+          type: string
+          example: Success
+
+    StudentListResponse:
+      type: object
+      required: [success, data, message]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Student'
+        message:
+          type: string
+          example: Success
+
+    ErrorBody:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: year must be an integer between 1 and 4
+
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+
+    DeleteResponse:
+      type: object
+      required: [success, data, message]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          nullable: true
+          example: null
+        message:
+          type: string
+          example: Student deleted

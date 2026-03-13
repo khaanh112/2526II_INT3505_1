@@ -5,7 +5,7 @@ import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = "change-this-in-production"
+app.config["JWT_SECRET_KEY"] = "change-thi  s-in-production"
 app.config["JWT_ALGORITHM"] = "HS256"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 

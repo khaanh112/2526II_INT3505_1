@@ -54,7 +54,7 @@ def profile():
 
 @app.get("/products")
 def list_products():
-    return {"products": products,
+    data = {"products": products,
             "links": {
                 "self": "/products",
                 "create": "/products",
@@ -62,7 +62,10 @@ def list_products():
                 "update_product": "/products/<id>",
                 "delete_product": "/products/<id>"
             }
-            }, 200
+            }
+    response = make_response(jsonify(data))
+    return response
+
 
 @app.get("/products/<int:product_id>")
 def product_detail(product_id):

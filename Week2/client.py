@@ -7,7 +7,7 @@ def call_code_on_demand():
     response = requests.get(f"{BASE_URL}/code-on-demand")
 
     if response.status_code == 200:
-        print("--- Thực thi code nhận được (exec) ---")
+        print("Thực thi code nhận được (exec)")
         exec(response.text)  
 
 

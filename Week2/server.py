@@ -1,6 +1,13 @@
-from flask import Flask, current_app, jsonify, make_response, request, g
+from datetime import datetime, timedelta, timezone
+
+from flask import Flask, jsonify, make_response, request, g
+import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = "change-this-in-production"
+app.config["JWT_ALGORITHM"] = "HS256"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 
 products = [
     {"id": 1, "name": "Product 1", "price": 10.99},
@@ -8,36 +15,85 @@ products = [
     {"id": 3, "name": "Product 3", "price": 5.99},
 ]
 
-TOKENS = {
-    "token_user_123": {"id": 1, "name": "Mai", "role": "user"},
-    "token_admin_456": {"id": 2, "name": "Admin", "role": "admin"},
+USERS = {
+    "mai": {"id": 1, "name": "Mai", "role": "user", "password": "123456"},
+    "admin": {"id": 2, "name": "Admin", "role": "admin", "password": "admin456"},
 }
+
+
+def create_token(user):
+    now = datetime.now(timezone.utc)
+    exp = now + app.config["JWT_ACCESS_TOKEN_EXPIRES"]
+    payload = {
+        "sub": str(user["id"]),
+        "name": user["name"],
+        "role": user["role"],
+        "iat": now,
+        "exp": exp,
+    }
+    return jwt.encode(
+        payload,
+        app.config["JWT_SECRET_KEY"],
+        algorithm=app.config["JWT_ALGORITHM"],
+    )
+
+
+def decode_token(token):
+    return jwt.decode(
+        token,
+        app.config["JWT_SECRET_KEY"],
+        algorithms=[app.config["JWT_ALGORITHM"]],
+    )
 
 # Middleware
 @app.before_request
 def authenticate():
-    
-    public_paths = ["/", "/products", "/code-on-demand"]
-    is_product_detail = request.path.startswith("/products/") and request.method == "GET"
+    public_paths = ["/", "/login"]
 
-    if request.path in public_paths or is_product_detail:
+    if request.path in public_paths :
         return
 
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return jsonify({"error": "Missing Authorization header"}), 401
-
+    auth_header = request.headers.get("Authorization", "")
     parts = auth_header.split()
     if len(parts) != 2 or parts[0] != "Bearer":
-        return jsonify({"error": "Invalid Authorization format"}), 401
+        return jsonify({"error": "Missing or invalid Authorization header"}), 401
 
     token = parts[1]
-    user = TOKENS.get(token)
+    try:
+        claims = decode_token(token)
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "Invalid JWT token"}), 401
 
+    user_id = claims.get("sub")
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid token subject"}), 401
+
+    user = next((u for u in USERS.values() if u["id"] == user_id), None)
     if not user:
-        return jsonify({"error": "Invalid token"}), 401
+        return jsonify({"error": "User not found"}), 401
 
-    g.current_user = user  
+    g.current_user = {"id": user["id"], "name": user["name"], "role": user["role"]}
+
+
+@app.post("/login")
+def login():
+    payload = request.get_json(silent=True) or {}
+    username = payload.get("username")
+    password = payload.get("password")
+
+    if not username or not password:
+        return {"error": "username and password are required"}, 400
+
+    user = USERS.get(username)
+    if not user or user["password"] != password:
+        return {"error": "Invalid credentials"}, 401
+
+    access_token = create_token(user)
+    return {"access_token": access_token, "token_type": "Bearer"}, 200
 
 
 @app.route("/")

@@ -26,6 +26,7 @@ def error_response(code, message, status_code):
 def get_users():
     return success_response(users)
 
+
 @app.get("/api/v1/users")
 def get_users_v1():
     return success_response(users)
@@ -82,6 +83,7 @@ def delete_user(user_id):
 
     users = [u for u in users if u["id"] != user_id]
     return success_response(None, "User deleted")
+
 
 @app.get("/users/<int:user_id>/orders")
 def get_user_orders(user_id):

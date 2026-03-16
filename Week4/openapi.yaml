@@ -1,10 +1,9 @@
 openapi: 3.0.3
 info:
   title: Week4 Student Management API
-  version: 1.0.0
+  version: 1.0.1
   description: |
     API demo cho môn học nhằm minh hoạ cách tài liệu hoá dịch vụ REST bằng OpenAPI (Swagger).
-
     Mục tiêu học tập:
     - Hiểu vai trò của OpenAPI trong chuẩn hoá giao tiếp client-server.
     - Nắm cấu trúc `paths`, `components/schemas`, `components/parameters`.

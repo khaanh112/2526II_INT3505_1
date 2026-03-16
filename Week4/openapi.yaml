@@ -109,6 +109,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+    put:
+      tags: [Students]
+      summary: Cập nhật thông tin một sinh viên
+      operationId: updateStudent
+      parameters:
+        - $ref: '#/components/parameters/StudentIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStudentRequest'
+            example:
+              full_name: Le Van C Updated
+              email: c.updated@example.com
+              year: 4
+      responses:
+        '200':
+          description: Cập nhật sinh viên thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentSingleResponse'
+        '400':
+          description: Dữ liệu đầu vào không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Không tìm thấy sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Trùng email sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     delete:
       tags: [Students]
       summary: Xoá một sinh viên

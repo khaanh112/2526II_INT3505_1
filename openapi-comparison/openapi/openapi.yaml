@@ -43,6 +43,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BookCreateRequest'
+            example:
+              title: Demo Book
+              author: Demo Author
       responses:
         '201':
           description: Tạo thành công
@@ -50,12 +53,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookResponse'
-        '400':
-          description: Dữ liệu không hợp lệ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
   /books/{bookId}:
     parameters:
@@ -79,6 +76,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BookUpdateRequest'
+            example:
+              title: Updated Demo Book
+              author: Updated Demo Author
       responses:
         '200':
           description: Cập nhật thành công

@@ -1,59 +1,78 @@
-# Flask Library Demo
+# OpenAPI Comparison (Library Demo)
 
-Demo nhỏ quản lý thư viện bằng Flask (in-memory data).
+Demo nhỏ để so sánh 4 format tài liệu API: **OpenAPI, API Blueprint, RAML, TypeSpec**.
 
-## Chạy nhanh
+## Cấu trúc
+
+- `openapi/openapi.yaml`
+- `api-blueprint/api.apib`
+- `raml/api.raml`
+- `typesec/main.tsp`
+
+Mỗi thư mục con có `README.md` riêng với lệnh cài đặt/chạy.
+
+## API demo (đơn giản)
+
+- `GET /health`
+- `GET /books`
+- `GET /books/<book_id>`
+- `POST /books`
+- `PUT /books/<book_id>`
+- `DELETE /books/<book_id>`
+
+## Chạy server Flask
 
 ```bash
 pip install flask
 python server.py
 ```
 
-Chạy tại: `http://127.0.0.1:5000`
+Server chạy ở `http://127.0.0.1:5000`.
 
-## API chính
+## So sánh nhanh
 
-- `GET /docs` - danh sách endpoint tài liệu API
-- `GET /docs/swagger` - mở Swagger UI (đọc từ OpenAPI hiện tại)
-- `GET /docs/openapi.yaml` - file OpenAPI
-- `GET /docs/api.apib` - file API Blueprint
-- `GET /docs/api.raml` - file RAML
-- `GET /docs/main.tsp` - file TypeSpec
-- `GET /books` - danh sách sách (hỗ trợ `?q=keyword&available=true|false`)
-- `GET /books/<book_id>` - chi tiết sách
-- `POST /books` - thêm sách
-- `PUT /books/<book_id>` - cập nhật sách
-- `DELETE /books/<book_id>` - xoá sách (chỉ khi chưa được mượn)
-- `GET /members` - danh sách thành viên
-- `POST /borrow` - mượn sách
-- `POST /return` - trả sách
-- `GET /borrow-records` - lịch sử mượn/trả
+| Format | Mục tiêu chính | Sinh code có sẵn | Sinh test có sẵn |
+|---|---|---|---|
+| OpenAPI | Chuẩn phổ biến nhất, hệ sinh thái mạnh | Có (`openapi-generator`) | Có công cụ phổ biến từ spec (`dredd`, `schemathesis`) |
+| API Blueprint | Viết docs dễ đọc, thiên về mô tả | Không có chuẩn codegen phổ biến như OpenAPI | Có `dredd` chạy API contract test từ `.apib` |
+| RAML | Mạnh trong hệ sinh thái Mule/Anypoint | Có trong hệ sinh thái Mule (APIkit), ngoài hệ này không phổ biến | Không có 1 chuẩn test tool phổ biến độc lập như OpenAPI |
+| TypeSpec | Ngôn ngữ mô hình API, sinh spec | Sinh OpenAPI qua `tsp compile`, sau đó codegen bằng tool OpenAPI | Sinh OpenAPI trước, sau đó test bằng tool OpenAPI |
 
-## Ví dụ body
+## Demo sinh code/test bằng công cụ có sẵn
 
-### POST /books
+### 1) OpenAPI
 
-```json
-{
-  "title": "Domain-Driven Design",
-  "author": "Eric Evans",
-  "year": 2003
-}
+Sinh Python client:
+
+```bash
+npx --yes @openapitools/openapi-generator-cli generate -i openapi/openapi.yaml -g python -o generated/openapi-python-client
 ```
 
-### POST /borrow
+Contract test với Dredd:
 
-```json
-{
-  "book_id": 1,
-  "member_id": 2
-}
+```bash
+npx --yes dredd openapi/openapi.yaml http://127.0.0.1:5000
 ```
 
-### POST /return
+### 2) API Blueprint
 
-```json
-{
-  "book_id": 1
-}
+Contract test trực tiếp từ `.apib` bằng Dredd:
+
+```bash
+npx --yes dredd api-blueprint/api.apib http://127.0.0.1:5000
 ```
+
+### 3) RAML
+
+RAML không có workflow codegen/test CLI độc lập phổ biến như OpenAPI trong repo demo này.
+Thực tế thường dùng trong hệ sinh thái Mule/Anypoint (APIkit).
+
+### 4) TypeSpec
+
+Compile TypeSpec thành OpenAPI:
+
+```bash
+npx --yes @typespec/compiler compile typesec/main.tsp --emit @typespec/openapi3
+```
+
+Sau đó dùng OpenAPI tool để sinh code/test (giống phần OpenAPI).

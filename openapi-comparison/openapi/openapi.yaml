@@ -1,33 +1,19 @@
 openapi: 3.0.3
 info:
-  title: Library Management API
+  title: Library API (Simple Demo)
   version: 1.0.0
-  description: Tài liệu API khớp với Flask demo trong openapi-comparison/server.py.
+  description: API quản lý thư viện tối giản để demo tài liệu hóa và sinh code/test.
 servers:
   - url: http://localhost:5000
 
 tags:
-  - name: System
+  - name: Health
   - name: Books
-  - name: Members
-  - name: Borrow
 
 paths:
-  /:
-    get:
-      tags: [System]
-      summary: Thông tin API
-      responses:
-        '200':
-          description: API info
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-
   /health:
     get:
-      tags: [System]
+      tags: [Health]
       summary: Kiểm tra trạng thái dịch vụ
       responses:
         '200':
@@ -41,27 +27,13 @@ paths:
     get:
       tags: [Books]
       summary: Lấy danh sách sách
-      parameters:
-        - in: query
-          name: q
-          required: false
-          schema:
-            type: string
-          description: Từ khóa tìm theo title hoặc author
-        - in: query
-          name: available
-          required: false
-          schema:
-            type: string
-            enum: ["true", "false"]
-          description: Lọc theo trạng thái còn sách
       responses:
         '200':
           description: Danh sách sách
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/BooksListResponse'
     post:
       tags: [Books]
       summary: Thêm sách mới
@@ -77,7 +49,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/BookResponse'
         '400':
           description: Dữ liệu không hợp lệ
           content:
@@ -85,7 +57,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /books/{book_id}:
+  /books/{bookId}:
     parameters:
       - $ref: '#/components/parameters/BookId'
     get:
@@ -97,13 +69,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '404':
-          description: Không tìm thấy sách
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BookResponse'
     put:
       tags: [Books]
       summary: Cập nhật sách
@@ -119,19 +85,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
-          description: Dữ liệu không hợp lệ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Không tìm thấy sách
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BookResponse'
     delete:
       tags: [Books]
       summary: Xóa sách
@@ -141,127 +95,56 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                $ref: '#/components/schemas/DeleteResponse'
         '404':
           description: Không tìm thấy sách
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Không thể xóa sách đang được mượn
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /members:
-    get:
-      tags: [Members]
-      summary: Lấy danh sách thành viên
-      responses:
-        '200':
-          description: Danh sách thành viên
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-
-  /borrow:
-    post:
-      tags: [Borrow]
-      summary: Mượn sách
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BorrowRequest'
-      responses:
-        '201':
-          description: Mượn thành công
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
-          description: Dữ liệu không hợp lệ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Không tìm thấy sách hoặc thành viên
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Sách đã được mượn
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /return:
-    post:
-      tags: [Borrow]
-      summary: Trả sách
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReturnRequest'
-      responses:
-        '200':
-          description: Trả sách thành công
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
-          description: Dữ liệu không hợp lệ
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Không tìm thấy dữ liệu
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Sách chưa được mượn
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /borrow-records:
-    get:
-      tags: [Borrow]
-      summary: Lấy lịch sử mượn trả
-      responses:
-        '200':
-          description: Danh sách lịch sử
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
 
 components:
   parameters:
     BookId:
-      name: book_id
+      name: bookId
       in: path
       required: true
       schema:
         type: integer
         minimum: 1
+      example: 1
 
   schemas:
+    Book:
+      type: object
+      required: [id, title, author]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+
+    BookCreateRequest:
+      type: object
+      required: [title, author]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        author:
+          type: string
+          minLength: 1
+
+    BookUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+
     SuccessResponse:
       type: object
       required: [success, message, data]
@@ -273,8 +156,45 @@ components:
           type: string
           example: Success
         data:
-          description: Dữ liệu trả về tùy endpoint
           nullable: true
+
+    BooksListResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Book'
+
+    BookResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Book'
+
+    DeleteResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              nullable: true
+
+    HealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: ok
 
     ErrorResponse:
       type: object
@@ -287,80 +207,8 @@ components:
           type: string
           example: Book not found
 
-    Book:
+    IntegerId:
       type: object
-      required: [id, title, author, year, available]
       properties:
         id:
-          type: integer
-        title:
-          type: string
-        author:
-          type: string
-        year:
-          type: integer
-        available:
-          type: boolean
-
-    Member:
-      type: object
-      required: [id, name, email]
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-
-    BorrowRecord:
-      type: object
-      required: [book_id, member_id, borrowed_at, returned_at]
-      properties:
-        book_id:
-          type: integer
-        member_id:
-          type: integer
-        borrowed_at:
-          type: string
-        returned_at:
-          type: string
-          nullable: true
-
-    BookCreateRequest:
-      type: object
-      required: [title, author, year]
-      properties:
-        title:
-          type: string
-        author:
-          type: string
-        year:
-          type: integer
-
-    BookUpdateRequest:
-      type: object
-      properties:
-        title:
-          type: string
-        author:
-          type: string
-        year:
-          type: integer
-
-    BorrowRequest:
-      type: object
-      required: [book_id, member_id]
-      properties:
-        book_id:
-          type: integer
-        member_id:
-          type: integer
-
-    ReturnRequest:
-      type: object
-      required: [book_id]
-      properties:
-        book_id:
           type: integer

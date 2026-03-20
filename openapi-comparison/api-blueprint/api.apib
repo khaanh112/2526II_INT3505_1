@@ -3,28 +3,7 @@ HOST: http://localhost:5000
 
 # Library Management API
 
-Demo API quản lý thư viện đồng bộ với server Flask trong openapi-comparison/server.py.
-
-# Group System
-
-## API Info [/]
-
-### Get API information [GET]
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "message": "Library API is running",
-          "data": {
-            "name": "Library Management Demo",
-            "endpoints": [
-              "GET /books",
-              "POST /borrow",
-              "POST /return"
-            ]
-          }
-        }
+Demo API thư viện tối giản: chỉ gồm health và CRUD sách.
 
 # Group Health
 
@@ -44,13 +23,9 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
 
 # Group Books
 
-## Books Collection [/books{?q,available}]
+## Books Collection [/books]
 
 ### List books [GET]
-
-+ Parameters
-    + q: `clean` (optional, string) - Từ khóa tìm theo title hoặc author.
-    + available: `true` (optional, boolean) - Lọc sách đang sẵn sàng cho mượn.
 
 + Response 200 (application/json)
 
@@ -61,9 +36,7 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
             {
               "id": 1,
               "title": "Clean Code",
-              "author": "Robert C. Martin",
-              "year": 2008,
-              "available": true
+              "author": "Robert C. Martin"
             }
           ]
         }
@@ -74,8 +47,7 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
 
         {
           "title": "Domain-Driven Design",
-          "author": "Eric Evans",
-          "year": 2003
+          "author": "Eric Evans"
         }
 
 + Response 201 (application/json)
@@ -86,9 +58,7 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
           "data": {
             "id": 2,
             "title": "Domain-Driven Design",
-            "author": "Eric Evans",
-            "year": 2003,
-            "available": true
+            "author": "Eric Evans"
           }
         }
 
@@ -107,9 +77,7 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
           "data": {
             "id": 1,
             "title": "Clean Code",
-            "author": "Robert C. Martin",
-            "year": 2008,
-            "available": true
+            "author": "Robert C. Martin"
           }
         }
 
@@ -126,7 +94,7 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
 
         {
           "title": "Clean Code 2nd Edition",
-          "year": 2026
+          "author": "Robert C. Martin"
         }
 
 + Response 200 (application/json)
@@ -137,9 +105,7 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
           "data": {
             "id": 1,
             "title": "Clean Code 2nd Edition",
-            "author": "Robert C. Martin",
-            "year": 2026,
-            "available": true
+            "author": "Robert C. Martin"
           }
         }
 
@@ -151,92 +117,4 @@ Demo API quản lý thư viện đồng bộ với server Flask trong openapi-co
           "success": true,
           "message": "Book deleted",
           "data": null
-        }
-
-# Group Members
-
-## Members Collection [/members]
-
-### List members [GET]
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "message": "Success",
-          "data": [
-            {
-              "id": 1,
-              "name": "Nguyen An",
-              "email": "an.nguyen@example.com"
-            }
-          ]
-        }
-
-# Group Borrow
-
-## Borrow Book [/borrow]
-
-### Borrow a book [POST]
-
-+ Request (application/json)
-
-        {
-          "book_id": 1,
-          "member_id": 2
-        }
-
-+ Response 201 (application/json)
-
-        {
-          "success": true,
-          "message": "Borrow successful",
-          "data": {
-            "book_id": 1,
-            "member_id": 2,
-            "borrowed_at": "2026-03-20T10:00:00Z",
-            "returned_at": null
-          }
-        }
-
-## Return Book [/return]
-
-### Return a book [POST]
-
-+ Request (application/json)
-
-        {
-          "book_id": 1
-        }
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "message": "Return successful",
-          "data": {
-            "book_id": 1,
-            "member_id": 2,
-            "borrowed_at": "2026-03-20T10:00:00Z",
-            "returned_at": "2026-03-21T10:00:00Z"
-          }
-        }
-
-## Borrow Records [/borrow-records]
-
-### List borrow records [GET]
-
-+ Response 200 (application/json)
-
-        {
-          "success": true,
-          "message": "Success",
-          "data": [
-            {
-              "book_id": 1,
-              "member_id": 2,
-              "borrowed_at": "2026-03-20T10:00:00Z",
-              "returned_at": "2026-03-21T10:00:00Z"
-            }
-          ]
         }

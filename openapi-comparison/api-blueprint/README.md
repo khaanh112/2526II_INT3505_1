@@ -3,10 +3,11 @@
 ## File chính
 - `api.apib`
 
-## Cài đặt công cụ render tài liệu
+## Cài đặt công cụ docs/test
 
 ```bash
 npm install -g aglio
+npm install -g dredd
 ```
 
 ## Chạy thử
@@ -24,12 +25,19 @@ aglio -i api.apib -s
 
 Sau đó mở địa chỉ hiển thị trong terminal (thường là `http://127.0.0.1:3000`).
 
-## Endpoint đã đồng bộ theo Flask server
-- `GET /`
+## Endpoint trong demo
 - `GET /health`
 - `GET /books`, `POST /books`
 - `GET /books/{bookId}`, `PUT /books/{bookId}`, `DELETE /books/{bookId}`
-- `GET /members`
-- `POST /borrow`
-- `POST /return`
-- `GET /borrow-records`
+
+## Sinh test/contract test (có sẵn)
+
+Chạy server Flask trước ở `http://127.0.0.1:5000`, sau đó:
+
+```bash
+dredd api.apib http://127.0.0.1:5000
+```
+
+## Sinh code
+
+API Blueprint không có chuẩn code generator phổ biến và ổn định như OpenAPI.

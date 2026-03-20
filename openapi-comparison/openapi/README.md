@@ -12,19 +12,24 @@ docker run -p 8080:8080 -e SWAGGER_JSON=/foo/openapi.yaml -v ${PWD}:/foo swagger
 
 Hoặc dùng VS Code extension **Swagger Viewer**.
 
-## Chạy thử
-1. Di chuyển vào thư mục này.
-2. Mở `http://localhost:8080` nếu chạy bằng Docker.
-3. Thử các endpoint: `/`, `/health`, `/books`, `/members`, `/borrow`, `/return`, `/borrow-records`.
+## Endpoint trong demo
+- `GET /health`
+- `GET /books`
+- `GET /books/{bookId}`
+- `POST /books`
+- `PUT /books/{bookId}`
+- `DELETE /books/{bookId}`
 
-## Lưu ý đồng bộ với Flask server
-- Server chạy mặc định ở `http://localhost:5000`.
-- Cấu trúc response chuẩn:
-	- Thành công: `{ "success": true, "message": "...", "data": ... }`
-	- Lỗi: `{ "success": false, "error": "..." }`
-
-## Generate client/server code (tuỳ chọn)
+## Sinh code (có sẵn)
 
 ```bash
-npx --yes @openapitools/openapi-generator-cli generate -i openapi.yaml -g python -o generated/python-client
+npx --yes @openapitools/openapi-generator-cli generate -i openapi.yaml -g python -o ../generated/openapi-python-client
+```
+
+## Sinh test/contract test (có sẵn)
+
+Chạy server Flask trước ở `http://127.0.0.1:5000`, sau đó:
+
+```bash
+npx --yes dredd openapi.yaml http://127.0.0.1:5000
 ```

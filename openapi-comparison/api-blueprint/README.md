@@ -1,43 +1,23 @@
-# API Blueprint Demo (Library Management)
+# API Blueprint
 
-## File chính
-- `api.apib`
+File: `api.apib`
 
-## Cài đặt công cụ docs/test
-
-```bash
-npm install -g aglio
-npm install -g dredd
-```
-
-## Chạy thử
-Render thành HTML:
+Cài tool:
 
 ```bash
-aglio -i api.apib -o docs.html
+npm install -g aglio dredd
 ```
 
-Preview trực tiếp:
+Xem docs nhanh:
 
 ```bash
 aglio -i api.apib -s
 ```
 
-Sau đó mở địa chỉ hiển thị trong terminal (thường là `http://127.0.0.1:3000`).
-
-## Endpoint trong demo
-- `GET /health`
-- `GET /books`, `POST /books`
-- `GET /books/{bookId}`, `PUT /books/{bookId}`, `DELETE /books/{bookId}`
-
-## Sinh test/contract test (có sẵn)
-
-Chạy server Flask trước ở `http://127.0.0.1:5000`, sau đó:
+Contract test:
 
 ```bash
 dredd api.apib http://127.0.0.1:5000
 ```
 
-## Sinh code
-
-API Blueprint không có chuẩn code generator phổ biến và ổn định như OpenAPI.
+Ghi chú: API Blueprint không mạnh về codegen như OpenAPI.

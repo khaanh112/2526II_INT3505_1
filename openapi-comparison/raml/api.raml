@@ -1,0 +1,236 @@
+#%RAML 1.0
+title: Library Management API
+version: v1
+baseUri: http://localhost:5000
+mediaType: application/json
+
+types:
+  SuccessResponse:
+    type: object
+    properties:
+      success: boolean
+      message: string
+      data: any
+
+  ErrorResponse:
+    type: object
+    properties:
+      success: boolean
+      error: string
+
+  ApiInfo:
+    type: object
+    properties:
+      name: string
+      endpoints: string[]
+
+  HealthData:
+    type: object
+    properties:
+      status: string
+
+  Book:
+    type: object
+    properties:
+      id: integer
+      title: string
+      author: string
+      year: integer
+      available: boolean
+
+  BookCreateRequest:
+    type: object
+    properties:
+      title: string
+      author: string
+      year: integer
+    required: [title, author, year]
+
+  BookUpdateRequest:
+    type: object
+    properties:
+      title?: string
+      author?: string
+      year?: integer
+
+  Member:
+    type: object
+    properties:
+      id: integer
+      name: string
+      email: string
+
+  BorrowRecord:
+    type: object
+    properties:
+      book_id: integer
+      member_id: integer
+      borrowed_at: datetime
+      returned_at: datetime?
+
+  BorrowRequest:
+    type: object
+    properties:
+      book_id: integer
+      member_id: integer
+    required: [book_id, member_id]
+
+  ReturnRequest:
+    type: object
+    properties:
+      book_id: integer
+    required: [book_id]
+
+/:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+
+/health:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+
+/books:
+  get:
+    queryParameters:
+      q:
+        type: string
+        required: false
+      available:
+        type: string
+        enum: ["true", "false"]
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+  post:
+    body:
+      application/json:
+        type: BookCreateRequest
+    responses:
+      201:
+        body:
+          application/json:
+            type: SuccessResponse
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+
+/books/{bookId}:
+  uriParameters:
+    bookId:
+      type: integer
+      minimum: 1
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+      404:
+        body:
+          application/json:
+            type: ErrorResponse
+  put:
+    body:
+      application/json:
+        type: BookUpdateRequest
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+      404:
+        body:
+          application/json:
+            type: ErrorResponse
+  delete:
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+      404:
+        body:
+          application/json:
+            type: ErrorResponse
+      409:
+        body:
+          application/json:
+            type: ErrorResponse
+
+/members:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+
+/borrow:
+  post:
+    body:
+      application/json:
+        type: BorrowRequest
+    responses:
+      201:
+        body:
+          application/json:
+            type: SuccessResponse
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+      404:
+        body:
+          application/json:
+            type: ErrorResponse
+      409:
+        body:
+          application/json:
+            type: ErrorResponse
+
+/return:
+  post:
+    body:
+      application/json:
+        type: ReturnRequest
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+      404:
+        body:
+          application/json:
+            type: ErrorResponse
+      409:
+        body:
+          application/json:
+            type: ErrorResponse
+
+/borrow-records:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: SuccessResponse

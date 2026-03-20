@@ -1,0 +1,242 @@
+FORMAT: 1A
+HOST: http://localhost:5000
+
+# Library Management API
+
+Demo API quản lý thư viện đồng bộ với server Flask trong openapi-comparison/server.py.
+
+# Group System
+
+## API Info [/]
+
+### Get API information [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Library API is running",
+          "data": {
+            "name": "Library Management Demo",
+            "endpoints": [
+              "GET /books",
+              "POST /borrow",
+              "POST /return"
+            ]
+          }
+        }
+
+# Group Health
+
+## Health Check [/health]
+
+### Get service health [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Service healthy",
+          "data": {
+            "status": "ok"
+          }
+        }
+
+# Group Books
+
+## Books Collection [/books{?q,available}]
+
+### List books [GET]
+
++ Parameters
+    + q: `clean` (optional, string) - Từ khóa tìm theo title hoặc author.
+    + available: `true` (optional, boolean) - Lọc sách đang sẵn sàng cho mượn.
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Success",
+          "data": [
+            {
+              "id": 1,
+              "title": "Clean Code",
+              "author": "Robert C. Martin",
+              "year": 2008,
+              "available": true
+            }
+          ]
+        }
+
+### Create book [POST]
+
++ Request (application/json)
+
+        {
+          "title": "Domain-Driven Design",
+          "author": "Eric Evans",
+          "year": 2003
+        }
+
++ Response 201 (application/json)
+
+        {
+          "success": true,
+          "message": "Book created",
+          "data": {
+            "id": 2,
+            "title": "Domain-Driven Design",
+            "author": "Eric Evans",
+            "year": 2003,
+            "available": true
+          }
+        }
+
+## Book Detail [/books/{bookId}]
+
++ Parameters
+    + bookId: `1` (number, required)
+
+### Get book by id [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Success",
+          "data": {
+            "id": 1,
+            "title": "Clean Code",
+            "author": "Robert C. Martin",
+            "year": 2008,
+            "available": true
+          }
+        }
+
++ Response 404 (application/json)
+
+        {
+          "success": false,
+          "error": "Book not found"
+        }
+
+### Update book [PUT]
+
++ Request (application/json)
+
+        {
+          "title": "Clean Code 2nd Edition",
+          "year": 2026
+        }
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Book updated",
+          "data": {
+            "id": 1,
+            "title": "Clean Code 2nd Edition",
+            "author": "Robert C. Martin",
+            "year": 2026,
+            "available": true
+          }
+        }
+
+### Delete book [DELETE]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Book deleted",
+          "data": null
+        }
+
+# Group Members
+
+## Members Collection [/members]
+
+### List members [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Success",
+          "data": [
+            {
+              "id": 1,
+              "name": "Nguyen An",
+              "email": "an.nguyen@example.com"
+            }
+          ]
+        }
+
+# Group Borrow
+
+## Borrow Book [/borrow]
+
+### Borrow a book [POST]
+
++ Request (application/json)
+
+        {
+          "book_id": 1,
+          "member_id": 2
+        }
+
++ Response 201 (application/json)
+
+        {
+          "success": true,
+          "message": "Borrow successful",
+          "data": {
+            "book_id": 1,
+            "member_id": 2,
+            "borrowed_at": "2026-03-20T10:00:00Z",
+            "returned_at": null
+          }
+        }
+
+## Return Book [/return]
+
+### Return a book [POST]
+
++ Request (application/json)
+
+        {
+          "book_id": 1
+        }
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Return successful",
+          "data": {
+            "book_id": 1,
+            "member_id": 2,
+            "borrowed_at": "2026-03-20T10:00:00Z",
+            "returned_at": "2026-03-21T10:00:00Z"
+          }
+        }
+
+## Borrow Records [/borrow-records]
+
+### List borrow records [GET]
+
++ Response 200 (application/json)
+
+        {
+          "success": true,
+          "message": "Success",
+          "data": [
+            {
+              "book_id": 1,
+              "member_id": 2,
+              "borrowed_at": "2026-03-20T10:00:00Z",
+              "returned_at": "2026-03-21T10:00:00Z"
+            }
+          ]
+        }

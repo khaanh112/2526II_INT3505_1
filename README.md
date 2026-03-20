@@ -26,41 +26,6 @@ Week4/
 - Python 3.10+
 - pip
 
-## Week2 - Flask cơ bản + JWT + Code on Demand
-
-### File chính
-- `Week2/server.py`: API Flask có đăng nhập JWT, middleware xác thực, CRUD sản phẩm.
-- `Week2/client.py`: client gọi endpoint `/code-on-demand` và thực thi code nhận về.
-
-### Chạy local
-
-```bash
-cd Week2
-pip install flask pyjwt requests
-python server.py
-```
-
-Server mặc định chạy tại `http://127.0.0.1:5000`.
-
-### Tài khoản mẫu
-- User: `mai` / `123456`
-- Admin: `admin` / `admin456`
-
-## Week3 - So sánh API design
-
-### File chính
-- `Week3/badapi.py`: ví dụ API chưa tốt (naming không nhất quán, endpoint chưa RESTful).
-- `Week3/goodapi.py`: ví dụ API tốt hơn (RESTful, chuẩn response, error handling rõ ràng, versioning).
-
-### Chạy local
-
-```bash
-cd Week3
-pip install flask
-python badapi.py
-# hoặc
-python goodapi.py
-```
 
 ## Week4 - Student Management API + OpenAPI
 

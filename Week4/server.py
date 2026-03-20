@@ -45,6 +45,9 @@ def success_response(data, message="Success", status_code=200):
 def error_response(code, message, status_code):
 	return jsonify({"success": False, "error": {"code": code, "message": message}}), status_code
 
+@app.get("/")
+def index():
+	return success_response({"message": "Welcome to Khaanh's API"}, "API is working")
 
 @app.get("/health")
 def health_check():

@@ -11,6 +11,8 @@ info:
 servers:
   - url: http://127.0.0.1:5000
     description: Local development server
+  - url: https://2526-ii-int-3505-1-theta.vercel.app
+    description: Production server
 
 tags:
   - name: Health

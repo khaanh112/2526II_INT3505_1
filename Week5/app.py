@@ -3,16 +3,15 @@ from flask import Flask, jsonify, request, abort
 app = Flask(__name__)
 
 # --- Mock Data ---
+# Expanded products list for pagination (30 items)
 products = [
-    {"id": "p1", "name": "Smartphone X", "price": 999.0, "category_id": "c1", "stock": 50},
-    {"id": "p2", "name": "Laptop Pro", "price": 1999.0, "category_id": "c1", "stock": 20},
-    {"id": "p3", "name": "Wireless Headphones", "price": 199.0, "category_id": "c1", "stock": 100},
-    {"id": "p4", "name": "Action Figure", "price": 49.0, "category_id": "c2", "stock": 30},
+    {"id": f"p{i}", "name": f"Product {i}", "price": 10.0 * i, "category_id": "c1" if i % 2 == 0 else "c2", "stock": 100}
+    for i in range(1, 31)
 ]
 
 categories = [
     {"id": "c1", "name": "Electronics"},
-    {"id": "c2", "name": "Toys"},
+    {"id": "c2", "name": "Home & Garden"},
 ]
 
 users = {
@@ -20,22 +19,92 @@ users = {
 }
 
 carts = {
-    "u1": {"items": [{"product_id": "p1", "quantity": 1}], "total": 999.0}
+    "u1": {"items": [], "total": 0.0}
 }
 
 orders = {
     "u1": []
 }
 
-# --- Products Endpoints ---
+# --- Products Endpoints with Pagination ---
 
 @app.route('/v1/products', methods=['GET'])
 def get_products():
     category = request.args.get('category')
+    data = products
+    
+    # 1. Filtering
     if category:
-        filtered = [p for p in products if p['category_id'] == category]
-        return jsonify(filtered)
-    return jsonify(products)
+        data = [p for p in data if p['category_id'] == category]
+    
+    total = len(data)
+    
+    # 2. Pagination Parameters
+    limit = request.args.get('limit', default=10, type=int)
+    offset = request.args.get('offset', default=None, type=int)
+    page = request.args.get('page', default=None, type=int)
+    per_page = request.args.get('per_page', default=10, type=int)
+    after_id = request.args.get('after_id', default=None, type=str)
+    
+    # 3. Strategy Detection & Logic
+    
+    # --- Strategy A: Cursor-based Pagination ---
+    if after_id:
+        # Find the index of the item after the cursor
+        start_index = 0
+        for i, p in enumerate(data):
+            if p['id'] == after_id:
+                start_index = i + 1
+                break
+        
+        paginated_data = data[start_index : start_index + limit]
+        next_cursor = paginated_data[-1]['id'] if len(paginated_data) == limit and start_index + limit < total else None
+        
+        return jsonify({
+            "items": paginated_data,
+            "metadata": {
+                "total": total,
+                "count": len(paginated_data),
+                "limit": limit,
+                "next_cursor": next_cursor,
+                "strategy": "cursor"
+            }
+        })
+    
+    # --- Strategy B: Page-based Pagination ---
+    if page is not None:
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_data = data[start:end]
+        
+        return jsonify({
+            "items": paginated_data,
+            "metadata": {
+                "total": total,
+                "count": len(paginated_data),
+                "page": page,
+                "per_page": per_page,
+                "total_pages": (total + per_page - 1) // per_page,
+                "strategy": "page-based"
+            }
+        })
+    
+    # --- Strategy C: Offset/Limit Pagination (Default) ---
+    if offset is None:
+        offset = 0
+        
+    paginated_data = data[offset : offset + limit]
+    
+    return jsonify({
+        "items": paginated_data,
+        "metadata": {
+            "total": total,
+            "count": len(paginated_data),
+            "offset": offset,
+            "limit": limit,
+            "strategy": "offset-limit"
+        }
+    })
 
 @app.route('/v1/products/<product_id>', methods=['GET'])
 def get_product(product_id):

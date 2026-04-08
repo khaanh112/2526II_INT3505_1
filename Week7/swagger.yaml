@@ -1,0 +1,52 @@
+openapi: 3.0.0
+info:
+  title: User API (MongoDB Integrated)
+  description: Example Week 7 API for Users
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/v1
+paths:
+  /users:
+    get:
+      summary: Retrieve all users
+      operationId: get_users
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create a user
+      operationId: create_user
+      requestBody:
+        description: User object to add
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Invalid input
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        id:
+          type: string
+          description: MongoDB ObjectId as string
+          readOnly: true
+        name:
+          type: string
+        email:
+          type: string

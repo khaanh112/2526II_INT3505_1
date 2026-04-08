@@ -1,0 +1,241 @@
+openapi: 3.0.0
+info:
+  title: Library API (Simple Demo)
+  version: v1
+servers:
+- url: http://localhost:5000/
+paths:
+  /books:
+    get:
+      operationId: g_et_books
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+          description: ""
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    post:
+      operationId: p_ost_books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookCreateRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: ""
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /books/{bookId}:
+    delete:
+      operationId: d_elete_books_book_id
+      parameters:
+      - explode: false
+        in: path
+        name: bookId
+        required: true
+        schema:
+          minimum: 1
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: ""
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    get:
+      operationId: g_et_books_book_id
+      parameters:
+      - explode: false
+        in: path
+        name: bookId
+        required: true
+        schema:
+          minimum: 1
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: ""
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+    put:
+      operationId: p_ut_books_book_id
+      parameters:
+      - explode: false
+        in: path
+        name: bookId
+        required: true
+        schema:
+          minimum: 1
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookUpdateRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: ""
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /health:
+    get:
+      operationId: g_et_health
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+          description: ""
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+components:
+  callbacks: {}
+  examples: {}
+  headers: {}
+  links: {}
+  parameters: {}
+  requestBodies: {}
+  responses: {}
+  schemas:
+    SuccessResponse:
+      example:
+        data: data
+        success: true
+        message: message
+      properties:
+        success:
+          title: success
+          type: boolean
+        message:
+          title: message
+          type: string
+        data:
+          title: data
+          type: string
+      required:
+      - data
+      - message
+      - success
+      title: SuccessResponse
+      type: object
+    ErrorResponse:
+      example:
+        success: true
+        error: error
+      properties:
+        success:
+          title: success
+          type: boolean
+        error:
+          title: error
+          type: string
+      required:
+      - error
+      - success
+      title: ErrorResponse
+      type: object
+    ApiInfo:
+      properties:
+        name:
+          type: string
+        endpoints:
+          items:
+            type: string
+          type: array
+      required:
+      - endpoints
+      - name
+      type: object
+    HealthData:
+      properties:
+        status:
+          type: string
+      required:
+      - status
+      type: object
+    Book:
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+      required:
+      - author
+      - id
+      - title
+      type: object
+    BookCreateRequest:
+      example:
+        author: author
+        title: title
+      properties:
+        title:
+          title: title
+          type: string
+        author:
+          title: author
+          type: string
+      required:
+      - author
+      - title
+      title: BookCreateRequest
+      type: object
+    BookUpdateRequest:
+      example:
+        author: author
+        title: title
+      properties:
+        title:
+          title: title
+          type: string
+        author:
+          title: author
+          type: string
+      title: BookUpdateRequest
+      type: object
+  securitySchemes: {}

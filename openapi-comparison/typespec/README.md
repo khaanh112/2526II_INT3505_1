@@ -1,16 +1,22 @@
-# TypeSpec
+# TypeSpec Guide
 
-File: `main.tsp`
+Tài liệu hướng dẫn biên dịch TypeSpec sang OpenAPI và sinh Code.
 
-Compile ra OpenAPI:
-
+## 1. Biên dịch sang OpenAPI
+Dùng trình biên dịch của TypeSpec (yêu cầu file `tspconfig.yaml` phải cấu hình emitter `openapi3`):
 ```bash
-npx --yes @typespec/compiler compile main.tsp --emit @typespec/openapi3
+npx --yes @typespec/compiler compile .
+```
+Lệnh này mặc định sẽ tạo file tại thư mục `tsp-output/@typespec/openapi3/openapi.yaml`.
+
+## 2. Sinh Server (Flask/Python)
+Sinh code từ file kết quả của TypeSpec:
+```bash
+npx --yes @openapitools/openapi-generator-cli generate -i tsp-output/@typespec/openapi3/openapi.yaml -g python-flask -o ../generated/server-typespec-flask
 ```
 
-Sau đó dùng tool OpenAPI để sinh code/test:
-
+## Setup nhanh
+Nếu bạn chưa cài đặt môi trường TypeSpec:
 ```bash
-npx --yes @openapitools/openapi-generator-cli generate -i tsp-output/@typespec/openapi3/openapi.yaml -g python -o ../generated/typespec-python-client
-npx --yes dredd tsp-output/@typespec/openapi3/openapi.yaml http://127.0.0.1:5000
+npm install -g @typespec/compiler @typespec/openapi3
 ```

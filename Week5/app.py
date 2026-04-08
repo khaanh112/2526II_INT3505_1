@@ -3,11 +3,15 @@ from flask import Flask, jsonify, request, abort
 app = Flask(__name__)
 
 # --- Mock Data ---
-# Expanded products list for pagination (30 items)
+# Expanded products list for pagination (1,000,000 items)
 products = [
     {"id": f"p{i}", "name": f"Product {i}", "price": 10.0 * i, "category_id": "c1" if i % 2 == 0 else "c2", "stock": 100}
-    for i in range(1, 31)
+    for i in range(1, 1000001)
 ]
+
+# Simulate Database Index (Allows O(1) jump access instead of full table scan)
+product_index_map = { p['id']: i for i, p in enumerate(products) }
+
 
 categories = [
     {"id": "c1", "name": "Electronics"},
@@ -50,12 +54,19 @@ def get_products():
     
     # --- Strategy A: Cursor-based Pagination ---
     if after_id:
-        # Find the index of the item after the cursor
+        # Simulate Index Scan -> O(1) Jump directly
+        # In case 'category' is filtered, normally DB index handles it but we just use map.
         start_index = 0
-        for i, p in enumerate(data):
-            if p['id'] == after_id:
-                start_index = i + 1
-                break
+        
+        # O(1) Dictionary Lookup simulates Database Index hits
+        if not category:
+            start_index = product_index_map.get(after_id, -1) + 1
+        else:
+            # Fallback if filtered, though real DB composite indexes fix this.
+            for i, p in enumerate(data):
+                if p['id'] == after_id:
+                    start_index = i + 1
+                    break
         
         paginated_data = data[start_index : start_index + limit]
         next_cursor = paginated_data[-1]['id'] if len(paginated_data) == limit and start_index + limit < total else None
@@ -74,6 +85,11 @@ def get_products():
     # --- Strategy B: Page-based Pagination ---
     if page is not None:
         start = (page - 1) * per_page
+        
+        # Simulate Database Sequential Scan penalty for throwing away N offset rows
+        for _ in range(start): 
+            pass 
+            
         end = start + per_page
         paginated_data = data[start:end]
         
@@ -92,6 +108,10 @@ def get_products():
     # --- Strategy C: Offset/Limit Pagination (Default) ---
     if offset is None:
         offset = 0
+        
+    # Simulate Database Sequential Scan penalty for throwing away N offset rows
+    for _ in range(offset): 
+        pass 
         
     paginated_data = data[offset : offset + limit]
     

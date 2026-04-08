@@ -1,23 +1,21 @@
-# OpenAPI
+# OpenAPI Guide
 
-File: `openapi.yaml`
+Tài liệu hướng dẫn sinh Code từ OpenAPI Specification.
 
-Endpoints trong demo:
-- `GET /health`
-- `GET /books`
-- `GET /books/{bookId}`
-- `POST /books`
-- `PUT /books/{bookId}`
-- `DELETE /books/{bookId}`
-
-Sinh Python client:
-
+## Sinh Server (Flask/Python)
+Lệnh sinh trực tiếp bộ khung Server Flask:
 ```bash
-npx --yes @openapitools/openapi-generator-cli generate -i openapi.yaml -g python -o ../generated/openapi-python-client
+npx --yes @openapitools/openapi-generator-cli generate -i openapi.yaml -g python-flask -o ../generated/server-openapi-flask
 ```
 
-Contract test:
+## Sinh Client (Python)
+Lệnh sinh Client SDK để gọi API:
+```bash
+npx --yes @openapitools/openapi-generator-cli generate -i openapi.yaml -g python -o ../generated/client-openapi-python
+```
 
+## Chạy thử (Contract Testing)
+Sử dụng Dredd để kiểm tra tính đúng đắn của spec:
 ```bash
 npx --yes dredd openapi.yaml http://127.0.0.1:5000
 ```

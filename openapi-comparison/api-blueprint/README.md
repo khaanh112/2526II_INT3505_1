@@ -1,23 +1,21 @@
-# API Blueprint
+# API Blueprint Guide
 
-File: `api.apib`
+Tài liệu hướng dẫn chuyển đổi từ API Blueprint sang OpenAPI và sinh Code.
 
-Cài tool:
-
+## 1. Chuyển đổi sang OpenAPI (Swagger)
+Sử dụng công cụ `apib2swagger` để convert:
 ```bash
-npm install -g aglio dredd
+npx --yes apib2swagger -i api.apib -o swagger.json
 ```
 
-Xem docs nhanh:
-
+## 2. Sinh Server (Flask/Python)
+Sau khi có `swagger.json`, dùng lệnh sau để sinh bộ khung Server:
 ```bash
-aglio -i api.apib -s
+npx --yes @openapitools/openapi-generator-cli generate -i swagger.json -g python-flask -o ../generated/server-blueprint-flask
 ```
 
-Contract test:
-
+## 3. Review trực quan
+Dùng `aglio` để tạo file HTML đẹp mắt cho API Blueprint:
 ```bash
-dredd api.apib http://127.0.0.1:5000
+npx --yes aglio -i api.apib -o index.html
 ```
-
-Ghi chú: API Blueprint không mạnh về codegen như OpenAPI.

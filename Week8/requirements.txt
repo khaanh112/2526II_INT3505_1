@@ -1,0 +1,6 @@
+flask
+pymongo
+mongomock
+pytest
+locust
+requests

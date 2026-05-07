@@ -16,5 +16,24 @@ def get_users_v1():
         "data": users_db
     })
 
+
+
+@app.route('/api/v2/users', methods=['GET'])
+def get_users_v2():
+    data_v2 = []
+    for user in users_db:
+        names = user['name'].split(' ')
+        data_v2.append({
+            "id": user['id'],
+            "first_name": " ".join(names[1:]),
+            "last_name": names[0],
+            "email": user['email']
+        })
+    return jsonify({
+        "version": "v2",
+        "status": "active",
+        "data": data_v2
+    })
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

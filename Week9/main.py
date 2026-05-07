@@ -1,4 +1,6 @@
 from flask import Flask, jsonify
+from flask import make_response
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -8,11 +10,25 @@ users_db = [
     {"id": 2, "name": "Nguyen Van B", "email": "b@example.com"}
 ]
 
-# URL VERSIONING: Version 1
+
+def deprecated(message):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            response = make_response(f(*args, **kwargs))
+            response.headers['Warning'] = f'299 - "Deprecated API: {message}"'
+            response.headers['X-API-Deprecation-Date'] = '2026-12-31'
+            return response
+        return decorated_function
+    return decorator
+
+
 @app.route('/api/v1/users', methods=['GET'])
+@deprecated("V1 will be EOL by end of 2026. Please migrate to /api/v2/users")
 def get_users_v1():
     return jsonify({
         "version": "v1",
+        "status": "deprecated",
         "data": users_db
     })
 

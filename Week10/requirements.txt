@@ -1,0 +1,6 @@
+flask
+prometheus-flask-exporter
+flask-limiter
+pycircuitbreaker
+flask-talisman
+gunicorn

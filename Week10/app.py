@@ -12,7 +12,8 @@ from flask_talisman import Talisman
 app = Flask(__name__)
 
 # Security Headers (WAF-like)
-Talisman(app, content_security_policy=None) # CSP set to None for simplicity in demo
+# Set force_https=False for local development
+Talisman(app, content_security_policy=None, force_https=False) 
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -54,7 +55,7 @@ def log_request(response):
     return response
 
 # --- Circuit Breaker: Simulated External Service ---
-@circuit(failure_threshold=3, recovery_timeout=10)
+@circuit
 def external_service_call():
     if random.random() < 0.3:
         raise Exception("External service failure")

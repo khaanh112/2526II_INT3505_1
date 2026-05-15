@@ -129,7 +129,19 @@ def delete_student(student_id):
 def openapi_spec():
 	spec_path = Path(__file__).with_name("openapi.yaml")
 	return send_file(spec_path, mimetype="text/yaml")
-
+	
+@app.route('/debug-trace')
+def debug_trace():
+    return '''
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <h1>Trang kích hoạt Vercel Toolbar</h1>
+            <p>Nhấn Ctrl + . để bật toolbar nếu không thấy</p>
+            <script src="https://vercel.com/toolbar/injection.js"></script>
+        </body>
+    </html>
+    '''
 
 swagger_ui = get_swaggerui_blueprint(
 	"/docs",

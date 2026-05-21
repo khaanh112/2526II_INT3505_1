@@ -67,13 +67,54 @@ This section helps you understand when to choose which architectural style or te
 
 ---
 
-## 🚀 Running the API
+## 🚀 Running the demos
 
-1. Navigate to this directory and start the Flask server:
-   ```bash
-   python app.py
-   ```
-2. The server will run locally on `http://localhost:8000`.
+Install dependencies once:
+
+```bash
+cd Week11-12
+pip install -r requirements.txt
+```
+
+This week now has three API styles side by side over the same **Order** domain:
+
+| Style | Main file | Port | Best for |
+| :--- | :--- | :--- | :--- |
+| REST | `app.py` | `8000` | Resource CRUD, HATEOAS, webhooks |
+| GraphQL | `graphql_app.py` | `8001` | Client-selected fields and nested reads |
+| gRPC | `grpc_demo/server.py` | `50051` | Fast typed service-to-service calls |
+
+### REST API
+
+```bash
+python app.py
+```
+
+The REST server runs locally on `http://localhost:8000`.
+
+### GraphQL API
+
+```bash
+python graphql_app.py
+```
+
+The GraphQL server runs locally on `http://localhost:8001/graphql`.
+
+### gRPC API
+
+Start the gRPC server:
+
+```bash
+python -m grpc_demo.server
+```
+
+In another terminal, run the sample client:
+
+```bash
+python -m grpc_demo.client
+```
+
+The gRPC service listens on `127.0.0.1:50051`.
 
 ---
 
@@ -126,3 +167,61 @@ Check the in-memory event registry to confirm events were successfully emitted a
 ```bash
 curl http://localhost:8000/api/webhooks/events
 ```
+
+---
+
+## 🧪 GraphQL quick test
+
+Query only the fields the client needs:
+
+```bash
+curl -X POST http://localhost:8001/graphql \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "{ orders(status: \"PENDING\") { items { id customerName status totalAmount } totalItems } }"
+  }'
+```
+
+Create an order with a mutation:
+
+```bash
+curl -X POST http://localhost:8001/graphql \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "mutation CreateOrder($input: CreateOrderInput!) { createOrder(input: $input) { id customerName status totalAmount } }",
+    "variables": {
+      "input": {
+        "customerName": "Nguyen Van A",
+        "email": "vana@example.com",
+        "items": [
+          {"name": "USB-C Hub", "price": 25.5, "quantity": 2},
+          {"name": "Notebook Stand", "price": 39.0, "quantity": 1}
+        ]
+      }
+    }
+  }'
+```
+
+---
+
+## 🧪 gRPC quick test
+
+Run the server:
+
+```bash
+python -m grpc_demo.server
+```
+
+Run the client from a second terminal:
+
+```bash
+python -m grpc_demo.client
+```
+
+The client demonstrates:
+- `ListOrders`
+- `CreateOrder`
+- `PayOrder`
+- `GetOrder`
+
+The service contract is defined in `grpc_demo/orders.proto`.

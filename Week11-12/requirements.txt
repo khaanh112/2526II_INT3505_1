@@ -1,0 +1,6 @@
+flask
+requests
+grpcio
+grpcio-tools
+protobuf
+graphql-core

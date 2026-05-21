@@ -35,6 +35,50 @@ orders_db = [
     }
 ]
 
+def add_hateoas_links(order):
+    order_id = order["id"]
+    status = order["status"]
+    
+    links = {
+        "self": {
+            "href": f"/api/orders/{order_id}",
+            "method": "GET",
+            "rel": "self"
+        },
+        "update": {
+            "href": f"/api/orders/{order_id}",
+            "method": "PUT",
+            "rel": "update"
+        },
+        "delete": {
+            "href": f"/api/orders/{order_id}",
+            "method": "DELETE",
+            "rel": "delete"
+        }
+    }
+    
+    if status == "PENDING":
+        links["pay"] = {
+            "href": f"/api/orders/{order_id}/pay",
+            "method": "POST",
+            "rel": "payment"
+        }
+        links["cancel"] = {
+            "href": f"/api/orders/{order_id}/cancel",
+            "method": "POST",
+            "rel": "cancel"
+        }
+    elif status == "PAID":
+        links["ship"] = {
+            "href": f"/api/orders/{order_id}/ship",
+            "method": "POST",
+            "rel": "shipment"
+        }
+    
+    order_copy = dict(order)
+    order_copy["_links"] = links
+    return order_copy
+
 # Root entry point
 @app.route("/")
 def index():
@@ -96,14 +140,28 @@ def get_orders():
     end_idx = start_idx + limit
     paginated_orders = filtered_orders[start_idx:end_idx]
 
+    # Map HATEOAS links to each item
+    hateoas_orders = [add_hateoas_links(o) for o in paginated_orders]
+    
+    # Collection links
+    links = {
+        "self": {"href": f"/api/orders?page={page}&limit={limit}", "method": "GET"},
+        "create": {"href": "/api/orders", "method": "POST"}
+    }
+    if page > 1:
+        links["prev"] = {"href": f"/api/orders?page={page-1}&limit={limit}", "method": "GET"}
+    if page < total_pages:
+        links["next"] = {"href": f"/api/orders?page={page+1}&limit={limit}", "method": "GET"}
+        
     return jsonify({
-        "items": paginated_orders,
+        "items": hateoas_orders,
         "pagination": {
             "page": page,
             "limit": limit,
             "total_items": total_items,
             "total_pages": total_pages
-        }
+        },
+        "_links": links
     })
 
 # 2. READ ONE
@@ -112,7 +170,7 @@ def get_order(order_id):
     order = next((o for o in orders_db if o["id"] == order_id), None)
     if not order:
         return jsonify({"error": "NOT_FOUND", "message": f"Order with ID {order_id} not found"}), 404
-    return jsonify(order)
+    return jsonify(add_hateoas_links(order))
 
 # 3. CREATE
 @app.route("/api/orders", methods=["POST"])
@@ -160,7 +218,7 @@ def create_order():
     }
     
     orders_db.append(new_order)
-    return jsonify(new_order), 201
+    return jsonify(add_hateoas_links(new_order)), 201
 
 # 4. UPDATE
 @app.route("/api/orders/<int:order_id>", methods=["PUT"])
@@ -202,7 +260,7 @@ def update_order(order_id):
         order["total_amount"] = round(total_amount, 2)
         
     order["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
-    return jsonify(order)
+    return jsonify(add_hateoas_links(order))
 
 # 5. DELETE
 @app.route("/api/orders/<int:order_id>", methods=["DELETE"])
@@ -214,6 +272,46 @@ def delete_order(order_id):
         
     orders_db = [o for o in orders_db if o["id"] != order_id]
     return jsonify({"success": True, "message": f"Order {order_id} has been successfully deleted"})
+
+# 6. STATE TRANSITIONS (HATEOAS Actions)
+@app.route("/api/orders/<int:order_id>/pay", methods=["POST"])
+def pay_order(order_id):
+    order = next((o for o in orders_db if o["id"] == order_id), None)
+    if not order:
+        return jsonify({"error": "NOT_FOUND", "message": f"Order with ID {order_id} not found"}), 404
+        
+    if order["status"] != "PENDING":
+        return jsonify({"error": "INVALID_STATE", "message": f"Order cannot be paid from status {order['status']}"}), 400
+        
+    order["status"] = "PAID"
+    order["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    return jsonify(add_hateoas_links(order))
+
+@app.route("/api/orders/<int:order_id>/cancel", methods=["POST"])
+def cancel_order(order_id):
+    order = next((o for o in orders_db if o["id"] == order_id), None)
+    if not order:
+        return jsonify({"error": "NOT_FOUND", "message": f"Order with ID {order_id} not found"}), 404
+        
+    if order["status"] != "PENDING":
+        return jsonify({"error": "INVALID_STATE", "message": f"Order cannot be cancelled from status {order['status']}"}), 400
+        
+    order["status"] = "CANCELLED"
+    order["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    return jsonify(add_hateoas_links(order))
+
+@app.route("/api/orders/<int:order_id>/ship", methods=["POST"])
+def ship_order(order_id):
+    order = next((o for o in orders_db if o["id"] == order_id), None)
+    if not order:
+        return jsonify({"error": "NOT_FOUND", "message": f"Order with ID {order_id} not found"}), 404
+        
+    if order["status"] != "PAID":
+        return jsonify({"error": "INVALID_STATE", "message": f"Order cannot be shipped from status {order['status']}"}), 400
+        
+    order["status"] = "SHIPPED"
+    order["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    return jsonify(add_hateoas_links(order))
 
 if __name__ == "__main__":
     logger.info("Starting Week 11-12 API on port 8000...")

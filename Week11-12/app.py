@@ -1,5 +1,7 @@
 import datetime
 import logging
+import threading
+import requests
 from flask import Flask, request, jsonify
 
 # Set up logging
@@ -34,6 +36,39 @@ orders_db = [
         "updated_at": (datetime.datetime.utcnow() - datetime.timedelta(minutes=40)).isoformat() + "Z"
     }
 ]
+
+# Webhook databases & dispatcher
+webhook_subscriptions = []
+event_log = []
+subscription_id_counter = 1
+event_id_counter = 1
+
+def dispatch_webhook(event_type, event_data):
+    global event_id_counter
+    event_id = event_id_counter
+    event_id_counter += 1
+    
+    event_entry = {
+        "id": event_id,
+        "event_type": event_type,
+        "data": event_data,
+        "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+    event_log.append(event_entry)
+    logger.info(f"Event published: {event_type} (Event ID: {event_id})")
+    
+    def send_to_subscribers():
+        for sub in webhook_subscriptions:
+            if event_type in sub["events"] or "*" in sub["events"]:
+                target_url = sub["target_url"]
+                logger.info(f"Dispatching event {event_type} to subscriber {target_url}")
+                try:
+                    response = requests.post(target_url, json=event_entry, timeout=5)
+                    logger.info(f"Webhook response from {target_url}: Status {response.status_code}")
+                except Exception as e:
+                    logger.error(f"Failed to deliver webhook to {target_url}: {e}")
+                    
+    threading.Thread(target=send_to_subscribers, daemon=True).start()
 
 def add_hateoas_links(order):
     order_id = order["id"]
@@ -218,6 +253,7 @@ def create_order():
     }
     
     orders_db.append(new_order)
+    dispatch_webhook("order.created", new_order)
     return jsonify(add_hateoas_links(new_order)), 201
 
 # 4. UPDATE
@@ -285,6 +321,7 @@ def pay_order(order_id):
         
     order["status"] = "PAID"
     order["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    dispatch_webhook("order.paid", order)
     return jsonify(add_hateoas_links(order))
 
 @app.route("/api/orders/<int:order_id>/cancel", methods=["POST"])
@@ -298,6 +335,7 @@ def cancel_order(order_id):
         
     order["status"] = "CANCELLED"
     order["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    dispatch_webhook("order.cancelled", order)
     return jsonify(add_hateoas_links(order))
 
 @app.route("/api/orders/<int:order_id>/ship", methods=["POST"])
@@ -311,7 +349,55 @@ def ship_order(order_id):
         
     order["status"] = "SHIPPED"
     order["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+    dispatch_webhook("order.shipped", order)
     return jsonify(add_hateoas_links(order))
+
+# 7. WEBHOOK SUBSCRIPTIONS AND EVENTS
+@app.route("/api/webhooks/subscriptions", methods=["POST"])
+def create_webhook_subscription():
+    global subscription_id_counter
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "INVALID_BODY", "message": "JSON body is required"}), 400
+        
+    target_url = data.get("target_url")
+    events = data.get("events", [])
+    
+    if not target_url or not events:
+        return jsonify({"error": "VALIDATION_FAILED", "message": "target_url and events list are required"}), 400
+        
+    if not isinstance(events, list):
+        return jsonify({"error": "VALIDATION_FAILED", "message": "events must be a list of strings"}), 400
+        
+    sub_id = subscription_id_counter
+    subscription_id_counter += 1
+    
+    new_sub = {
+        "id": sub_id,
+        "target_url": target_url,
+        "events": [e.lower() for e in events],
+        "created_at": datetime.datetime.utcnow().isoformat() + "Z"
+    }
+    webhook_subscriptions.append(new_sub)
+    return jsonify(new_sub), 201
+
+@app.route("/api/webhooks/subscriptions", methods=["GET"])
+def get_webhook_subscriptions():
+    return jsonify(webhook_subscriptions)
+
+@app.route("/api/webhooks/subscriptions/<int:sub_id>", methods=["DELETE"])
+def delete_webhook_subscription(sub_id):
+    global webhook_subscriptions
+    sub = next((s for s in webhook_subscriptions if s["id"] == sub_id), None)
+    if not sub:
+        return jsonify({"error": "NOT_FOUND", "message": f"Subscription with ID {sub_id} not found"}), 404
+        
+    webhook_subscriptions = [s for s in webhook_subscriptions if s["id"] != sub_id]
+    return jsonify({"success": True, "message": f"Webhook subscription {sub_id} has been deleted"})
+
+@app.route("/api/webhooks/events", methods=["GET"])
+def get_webhook_events():
+    return jsonify(event_log)
 
 if __name__ == "__main__":
     logger.info("Starting Week 11-12 API on port 8000...")

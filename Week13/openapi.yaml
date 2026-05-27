@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Week 13 API Product Demo
+  version: 1.0.0
+  description: Demo for API as a Product with portal, sandbox, monetization, and analytics.
+servers:
+  - url: http://localhost:8013
+paths:
+  /:
+    get:
+      summary: Developer portal entry point
+      responses:
+        "200":
+          description: Portal metadata and important links
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: API is healthy
+  /api/docs:
+    get:
+      summary: Developer documentation metadata
+      responses:
+        "200":
+          description: Quickstart documentation payload
+  /api/plans:
+    get:
+      summary: Pricing plans
+      responses:
+        "200":
+          description: Freemium and paid API plans
+  /api/monetization:
+    get:
+      summary: Monetization model
+      responses:
+        "200":
+          description: Billing model, metrics, and guardrails
+  /api/launch-strategy:
+    get:
+      summary: Launch strategy
+      responses:
+        "200":
+          description: Launch phases and developer experience assets
+  /api/developers/register:
+    post:
+      summary: Register a developer and issue an API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                  example: Minh
+                email:
+                  type: string
+                  example: minh@example.com
+                company:
+                  type: string
+                  example: Student Lab
+                plan:
+                  type: string
+                  enum:
+                    - free
+                    - growth
+                    - enterprise
+                  example: free
+      responses:
+        "201":
+          description: Developer account and API key
+        "400":
+          description: Invalid registration payload
+  /api/developers:
+    get:
+      summary: List registered developers
+      responses:
+        "200":
+          description: Developer collection
+  /api/sandbox/weather:
+    get:
+      summary: Call the sandbox weather API
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+            example: Hanoi
+      responses:
+        "200":
+          description: Weather response
+        "401":
+          description: Missing or invalid API key
+        "404":
+          description: Unsupported sandbox city
+  /api/analytics/kpis:
+    get:
+      summary: API product KPIs
+      responses:
+        "200":
+          description: Developer registrations, call volume, error rate, and usage breakdown
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key

@@ -8,6 +8,33 @@ app = Flask(__name__)
 developers = {}
 api_keys = {}
 
+PRICING_PLANS = {
+    "free": {
+        "id": "free",
+        "name": "Free",
+        "monthly_fee_usd": 0,
+        "included_calls": 1000,
+        "overage_usd_per_call": 0.002,
+        "best_for": "Students, prototypes, and sandbox evaluation"
+    },
+    "growth": {
+        "id": "growth",
+        "name": "Growth",
+        "monthly_fee_usd": 49,
+        "included_calls": 50000,
+        "overage_usd_per_call": 0.001,
+        "best_for": "Small products with predictable traffic"
+    },
+    "enterprise": {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "monthly_fee_usd": None,
+        "included_calls": "custom",
+        "overage_usd_per_call": "contract",
+        "best_for": "High-volume teams needing SLA, support, and invoices"
+    }
+}
+
 SAMPLE_WEATHER = {
     "hanoi": {"city": "Hanoi", "temperature_c": 31, "condition": "Cloudy", "humidity": 72},
     "danang": {"city": "Da Nang", "temperature_c": 29, "condition": "Sunny", "humidity": 65},
@@ -65,14 +92,69 @@ def api_docs():
 @app.route("/api/plans")
 def pricing_plans():
     return jsonify({
-        "plans": [
+        "positioning": "Freemium for adoption, pay-per-call for scalable revenue.",
+        "plans": list(PRICING_PLANS.values())
+    })
+
+
+@app.route("/api/monetization")
+def monetization_model():
+    return jsonify({
+        "model": "freemium + pay-per-call",
+        "why_it_fits": [
+            "Free sandbox removes friction for new developers.",
+            "Usage-based overage aligns revenue with delivered API value.",
+            "Enterprise tier supports SLA, priority support, and custom volume."
+        ],
+        "billing_metrics": [
+            "successful_api_calls",
+            "premium_endpoint_calls",
+            "support_sla"
+        ],
+        "guardrails": [
+            "Publish quota and overage price clearly in the portal.",
+            "Send usage alerts before developers exceed included calls.",
+            "Keep sandbox free but rate-limited."
+        ]
+    })
+
+
+@app.route("/api/launch-strategy")
+def launch_strategy():
+    return jsonify({
+        "goal": "Make the first successful API call happen in under 5 minutes.",
+        "phases": [
             {
-                "id": "free",
-                "name": "Free",
-                "monthly_fee_usd": 0,
-                "included_calls": 1000,
-                "overage_usd_per_call": 0.002
+                "name": "Private beta",
+                "actions": [
+                    "Invite 10-20 developers from target use cases.",
+                    "Collect feedback on docs, sample code, and error messages.",
+                    "Track activation: registered developers who make one sandbox call."
+                ]
+            },
+            {
+                "name": "Public launch",
+                "actions": [
+                    "Publish developer portal, OpenAPI file, quickstart, and changelog.",
+                    "Offer free tier and visible upgrade path.",
+                    "Add support channel and status page link."
+                ]
+            },
+            {
+                "name": "Growth",
+                "actions": [
+                    "Add SDKs for the most active languages.",
+                    "Review analytics weekly: call volume, error rate, and retention.",
+                    "Use case studies to convert free developers to paid plans."
+                ]
             }
+        ],
+        "developer_experience_assets": [
+            "developer portal",
+            "interactive docs",
+            "sandbox API key",
+            "OpenAPI contract",
+            "sample curl requests"
         ]
     })
 
@@ -89,6 +171,11 @@ def register_developer():
         return jsonify({
             "error": "VALIDATION_FAILED",
             "message": "name and email are required"
+        }), 400
+    if plan not in PRICING_PLANS:
+        return jsonify({
+            "error": "UNKNOWN_PLAN",
+            "message": f"plan must be one of: {', '.join(PRICING_PLANS.keys())}"
         }), 400
 
     developer_id = str(len(developers) + 1)

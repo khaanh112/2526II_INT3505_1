@@ -1,12 +1,14 @@
 import datetime
+import time
 import uuid
 
-from flask import Flask, jsonify, request
+from flask import Flask, g, jsonify, request
 
 app = Flask(__name__)
 
 developers = {}
 api_keys = {}
+usage_events = []
 
 PRICING_PLANS = {
     "free": {
@@ -52,6 +54,45 @@ def find_developer_by_key():
     if not developer_id:
         return None
     return developers.get(developer_id)
+
+
+@app.before_request
+def start_request_timer():
+    g.started_at = time.perf_counter()
+
+
+@app.after_request
+def collect_usage_event(response):
+    if not request.path.startswith("/api/") or request.path == "/api/analytics/kpis":
+        return response
+
+    raw_key = request.headers.get("X-API-Key")
+    developer_id = api_keys.get(raw_key)
+    usage_events.append({
+        "timestamp": utc_now(),
+        "method": request.method,
+        "path": request.path,
+        "status_code": response.status_code,
+        "developer_id": developer_id,
+        "latency_ms": round((time.perf_counter() - g.started_at) * 1000, 2)
+    })
+    return response
+
+
+def plan_mix():
+    counts = {}
+    for developer in developers.values():
+        plan = developer["plan"]
+        counts[plan] = counts.get(plan, 0) + 1
+    return counts
+
+
+def calls_by_endpoint():
+    counts = {}
+    for event in usage_events:
+        key = f"{event['method']} {event['path']}"
+        counts[key] = counts.get(key, 0) + 1
+    return counts
 
 
 @app.route("/")
@@ -156,6 +197,24 @@ def launch_strategy():
             "OpenAPI contract",
             "sample curl requests"
         ]
+    })
+
+
+@app.route("/api/analytics/kpis")
+def analytics_kpis():
+    call_volume = len(usage_events)
+    error_count = len([event for event in usage_events if event["status_code"] >= 400])
+    error_rate = round(error_count / call_volume, 4) if call_volume else 0
+
+    return jsonify({
+        "developer_registrations": len(developers),
+        "active_api_keys": len(api_keys),
+        "call_volume": call_volume,
+        "error_count": error_count,
+        "error_rate": error_rate,
+        "plan_mix": plan_mix(),
+        "calls_by_endpoint": calls_by_endpoint(),
+        "recent_events": usage_events[-10:]
     })
 
 
